@@ -11,10 +11,34 @@ const {
   GraphQLString,
   GraphQLInt,
 } = require('graphql');
+const GraphQLJSON = require('graphql-type-json');
 const { getPersonById, getPeople, starshipList, getStarshipById } = require('./src/data');
 
 const PORT = process.env.PORT || 3000;
 const server = express();
+
+const starshipType = new GraphQLObjectType({
+  name: 'Starship',
+  description: 'A Starship in Star Wars',
+  fields: {
+    id: {
+      type: GraphQLID,
+      description: 'The id of the Starship.',
+    },
+    name: {
+      type: GraphQLString,
+      description: 'The name of the Starship.',
+    },
+    model: {
+      type: GraphQLString,
+      description: 'The model of the Starship.',
+    },
+    manufacturer: {
+      type: GraphQLString,
+      description: 'The manufacturer of the Starship.',
+    },
+  },
+});
 
 const personType = new GraphQLObjectType({
   name: 'Person',
@@ -48,29 +72,10 @@ const personType = new GraphQLObjectType({
       type: GraphQLString,
       description: 'The gender of the people.',
     },
-  },
-});
-
-const starshipType = new GraphQLObjectType({
-  name: 'Starship',
-  description: 'A Starship in Star Wars',
-  fields: {
-    id: {
-      type: GraphQLID,
-      description: 'The id of the Starship.',
-    },
-    name: {
-      type: GraphQLString,
-      description: 'The name of the Starship.',
-    },
-    model: {
-      type: GraphQLString,
-      description: 'The model of the Starship.',
-    },
-    manufacturer: {
-      type: GraphQLString,
-      description: 'The manufacturer of the Starship.',
-    },
+    starship: {
+      type: starshipType,
+      description: 'The starship of the people.',
+    }
   },
 });
 
@@ -108,7 +113,12 @@ const queryType = new GraphQLObjectType({
     },
     starshipList: {
       type: new GraphQLList(starshipType),
-      resolve: starshipList,
+      args: {
+        filter: {type: GraphQLJSON},
+      },
+      resolve: (_, args) => {
+        return starshipList(args);
+      },
     },
   },
 });
